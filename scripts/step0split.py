@@ -15,7 +15,7 @@ OUTPUTPATH = "splitaudio"
 DEFAULT_DURATION = 3000
 DEFAULT_FILETYPE = ".wav"
 SILENCE_DUR = 3000  # for how long should there be no sound before it's considered a silent segment
-SILENCE_THRESH = -16
+SILENCE_THRESH = -24  # this number is hella finicky. originally was 16.
 
 
 # def split_audio(duration, filetype):
@@ -28,18 +28,15 @@ def split_audio(duration):
             print("Found " + filename)
             if extension == ".wav":
                 audio = AudioSegment.from_wav(RAWPATH + "/" + filename)
-                print("Splitting for silence.")
-                segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=5)
-                print("Splitting complete!")
-                for segment in segments:
-                    # no extra padding is done in this step since librosa can do it there
-                    print("Making chunks!")
-                    chunks = make_chunks(segment, duration)
-                    for i, chunk in enumerate(chunks, start=count):
-                        chunk_name = OUTPUTPATH + "/chunk_{0}.wav".format(i)
-                        print("Exporting: " + chunk_name)
-                        chunk.export(chunk_name, format="wav")  # this assumes the path exists
-                        count = i + 1
+                # no extra padding is done in this step since librosa can do it there
+                # i just want to see if it splits because silence detection is wonky
+                print("Making chunks!")
+                chunks = make_chunks(audio, duration)
+                for i, chunk in enumerate(chunks, start=count):
+                    chunk_name = OUTPUTPATH + "/chunk_{0}.wav".format(i)
+                    print("Exporting: " + chunk_name)
+                    chunk.export(chunk_name, format="wav")  # this assumes the path exists
+                    count = i + 1
         print(time.time() - start_time)
 
 

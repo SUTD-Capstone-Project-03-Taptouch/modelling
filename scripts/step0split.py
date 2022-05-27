@@ -31,7 +31,7 @@ def split_audio(duration):
             if extension == ".wav":
                 audio = AudioSegment.from_wav(RAWPATH + "/" + filename)
                 print("Splitting for silence.")
-                segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=5)
+                segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=25)
                 print("Splitting complete!")
                 for segment in segments:
                     # no extra padding is done in this step since librosa can do it there

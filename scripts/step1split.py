@@ -1,6 +1,7 @@
 import argparse
 import os
 import time
+import ffmpeg
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from pydub.utils import make_chunks
@@ -10,8 +11,8 @@ from pydub.silence import detect_silence
 # It seems like bad practice to have data in the scripts folder.
 
 # file locations for input and output audio
-RAWPATH = "rawaudio"
-OUTPUTPATH = "splitaudio"
+RAW_PATH = "rawaudio"
+OUTPUT_PATH = "splitaudio"
 
 # useful global variables
 DEFAULT_DURATION = 3000
@@ -22,14 +23,14 @@ SILENCE_THRESH = -24  # this number is very finicky
 
 # def split_audio(duration, filetype):
 def split_audio(duration):
-    for root, dirs, files in os.walk(RAWPATH):
+    for root, dirs, files in os.walk(RAW_PATH):
         start_time = time.time()
         for filename in files:
             count = 1
             name, extension = os.path.splitext(filename)
             print("Found " + filename)
             if extension == ".wav":
-                audio = AudioSegment.from_wav(RAWPATH + "/" + filename)
+                audio = AudioSegment.from_wav(RAW_PATH + "/" + filename)
                 print("Splitting for silence.")
                 segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=25)
                 print("Splitting complete!")
@@ -40,7 +41,7 @@ def split_audio(duration):
                     print("Making chunks!")
                     chunks = make_chunks(segment, duration)
                     for i, chunk in enumerate(chunks, start=count):
-                        chunk_name = OUTPUTPATH + "/" + name + "_chunk_{0}.wav".format(i)
+                        chunk_name = OUTPUT_PATH + "/" + name + "_chunk_{0}.wav".format(i)
                         print("Exporting: " + chunk_name)
                         chunk.export(chunk_name, format="wav")  # this assumes the path exists
                         count = i + 1
@@ -48,7 +49,7 @@ def split_audio(duration):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="step0split", description="""Splits audio into defined segments.""")
+    parser = argparse.ArgumentParser(prog="step1split", description="""Splits audio into defined segments.""")
     parser.add_argument("-d", "--duration", help="How long you want your audio segments to be (in seconds). Defaults "
                                                  "to 3s.")
     # parser.add_argument("-f", "--filetype", help="Audio format, e.g. \".mp3\". Defaults to .wav if not specified.")

@@ -5,13 +5,12 @@ import ffmpeg
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from pydub.utils import make_chunks
-from pydub.silence import detect_silence
 # TODO: Figure out what to do about ffmpeg being pesky
 # TODO: probably move the audio samples to their own "/audio" folder?
 # It seems like bad practice to have data in the scripts folder.
 
 # file locations for input and output audio
-RAW_PATH = "rawaudio"
+INPUT_PATH = "rawaudio"
 OUTPUT_PATH = "splitaudio"
 
 # useful global variables
@@ -23,14 +22,14 @@ SILENCE_THRESH = -24  # this number is very finicky
 
 # def split_audio(duration, filetype):
 def split_audio(duration):
-    for root, dirs, files in os.walk(RAW_PATH):
+    for root, dirs, files in os.walk(INPUT_PATH):
         start_time = time.time()
         for filename in files:
             count = 1
             name, extension = os.path.splitext(filename)
             print("Found " + filename)
             if extension == ".wav":
-                audio = AudioSegment.from_wav(RAW_PATH + "/" + filename)
+                audio = AudioSegment.from_wav(INPUT_PATH + "/" + filename)
                 print("Splitting for silence.")
                 segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=25)
                 print("Splitting complete!")

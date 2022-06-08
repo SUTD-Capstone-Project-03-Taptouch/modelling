@@ -7,6 +7,7 @@ DURATION = 30  # seconds
 OUTPUT_PATH = "rawaudio"
 
 # TODO: allow for external interrupts?
+# TODO: cleanup?
 
 
 class GracefulExiter:

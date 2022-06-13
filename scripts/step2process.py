@@ -20,6 +20,7 @@ def librosafy():
             print("\r Processed {}/{} files.".format(i, len(files)), end=" ")
     signals = np.stack(signals, axis=0)
     print("\n", signals)
+    print("I have converted " + str(len(signals)) + " files.")
     return signals
 
 

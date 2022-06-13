@@ -17,7 +17,7 @@ OUTPUT_PATH = "splitaudio"
 DEFAULT_DURATION = 3000
 # DEFAULT_FILETYPE = ".wav" yeah let's not
 SILENCE_DUR = 3000  # for how long should there be no sound before it's considered a silent segment
-SILENCE_THRESH = -24  # this number is very finicky
+SILENCE_THRESH = -40  # this number is very finicky: most song files have threshold at -24. online sources say -40
 
 
 # def split_audio(duration, filetype):
@@ -33,12 +33,22 @@ def split_audio(duration):
                 print("Splitting for silence.")
                 segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=25)
                 print("Splitting complete!")
-                for segment in segments:
-                    # no extra padding is done in this step since librosa can do it there
-                    # TODO: Test this on real conversational audio
-                    # TODO: Get the program to auto-delete files?
-                    print("Making chunks!")
-                    chunks = make_chunks(segment, duration)
+                print(len(segments))
+                if len(segments) > 0:
+                    for segment in segments:
+                        # no extra padding is done in this step since librosa can do it there
+                        # TODO: Test this on real conversational audio
+                        # TODO: Get the program to auto-delete files?
+                        print("Making chunks!")
+                        chunks = make_chunks(segment, duration)
+                        for i, chunk in enumerate(chunks, start=count):
+                            chunk_name = OUTPUT_PATH + "/" + name + "_chunk_{0}.wav".format(i)
+                            print("Exporting: " + chunk_name)
+                            chunk.export(chunk_name, format="wav")  # this assumes the path exists
+                            count = i + 1
+                else:
+                    print("No silence detected, making chunks!")
+                    chunks = make_chunks(audio, duration)
                     for i, chunk in enumerate(chunks, start=count):
                         chunk_name = OUTPUT_PATH + "/" + name + "_chunk_{0}.wav".format(i)
                         print("Exporting: " + chunk_name)

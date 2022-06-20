@@ -3,6 +3,7 @@ import os
 import time
 import ffmpeg
 from pydub import AudioSegment
+from pydub.silence import detect_nonsilent
 from pydub.silence import split_on_silence
 from pydub.utils import make_chunks
 # TODO: Figure out what to do about ffmpeg being pesky
@@ -21,7 +22,8 @@ SILENCE_THRESH = -40  # this number is very finicky: most song files have thresh
 
 
 # def split_audio(duration, filetype):
-def split_audio(duration):
+# for future signalling, returns 0 if chunk is completely silent, else returns 1
+def split_audio(duration=DEFAULT_DURATION, thresh=SILENCE_THRESH):
     for root, dirs, files in os.walk(INPUT_PATH):
         start_time = time.time()
         for filename in files:
@@ -31,14 +33,13 @@ def split_audio(duration):
             if extension == ".wav":
                 audio = AudioSegment.from_wav(INPUT_PATH + "/" + filename)
                 print("Splitting for silence.")
-                segments = split_on_silence(audio, SILENCE_DUR, SILENCE_THRESH, keep_silence=500, seek_step=25)
+                segments = split_on_silence(audio, SILENCE_DUR, thresh, keep_silence=500, seek_step=25)
                 print("Splitting complete!")
                 print(len(segments))
                 if len(segments) > 0:
                     for segment in segments:
-                        # no extra padding is done in this step since librosa can do it there
+                        # no extra padding is done in this step
                         # TODO: Test this on real conversational audio
-                        # TODO: Get the program to auto-delete files?
                         print("Making chunks!")
                         chunks = make_chunks(segment, duration)
                         for i, chunk in enumerate(chunks, start=count):
@@ -47,6 +48,11 @@ def split_audio(duration):
                             chunk.export(chunk_name, format="wav")  # this assumes the path exists
                             count = i + 1
                 else:
+                    # Check that chunk isn't COMPLETELY silent
+                    got_silence = detect_nonsilent(audio, SILENCE_DUR, thresh, seek_step=25)
+                    if not got_silence:
+                        print ("This chunk is completely silent.")
+                        return 0
                     print("No silence detected, making chunks!")
                     chunks = make_chunks(audio, duration)
                     for i, chunk in enumerate(chunks, start=count):
@@ -55,18 +61,21 @@ def split_audio(duration):
                         chunk.export(chunk_name, format="wav")  # this assumes the path exists
                         count = i + 1
         print(time.time() - start_time)
+        return 1
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="step1split", description="""Splits audio into defined segments.""")
-    parser.add_argument("-d", "--duration", help="How long you want your audio segments to be (in seconds). Defaults "
-                                                 "to 3s.")
+    parser.add_argument("-d", "--duration", help="(Optional) How long you want your audio segments to be (in "
+                                                 "seconds). If unspecified, defaults to 3s.")
+    parser.add_argument("-t", "--threshold", help="(Optional) Minimum threshold before segment is considered silent. "
+                                                  "If unspecified, defaults to -40dBFs.")
     # parser.add_argument("-f", "--filetype", help="Audio format, e.g. \".mp3\". Defaults to .wav if not specified.")
 
     args = parser.parse_args()
 
     DURATION = int(args.duration) * 1000 if args.duration else DEFAULT_DURATION
+    THRESH = args.threshold if args.threshold else SILENCE_THRESH
     # FILETYPE = args.filetype if args.filetype else DEFAULT_FILETYPE
-
     # split_audio(DURATION, FILETYPE)
-    split_audio(DURATION)
+    split_audio(DURATION, THRESH)

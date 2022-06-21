@@ -1,6 +1,7 @@
 import argparse
 import os
 import time
+import tracemalloc
 import ffmpeg
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
@@ -26,6 +27,7 @@ SILENCE_THRESH = -40  # this number is very finicky: most song files have thresh
 def split_audio(duration=DEFAULT_DURATION, thresh=SILENCE_THRESH):
     for root, dirs, files in os.walk(INPUT_PATH):
         start_time = time.time()
+        tracemalloc.start()
         for filename in files:
             count = 1
             name, extension = os.path.splitext(filename)
@@ -35,7 +37,7 @@ def split_audio(duration=DEFAULT_DURATION, thresh=SILENCE_THRESH):
                 print("Splitting for silence.")
                 segments = split_on_silence(audio, SILENCE_DUR, thresh, keep_silence=500, seek_step=25)
                 print("Splitting complete!")
-                print(len(segments))
+                # print(len(segments))
                 if len(segments) > 0:
                     for segment in segments:
                         # no extra padding is done in this step
@@ -49,19 +51,22 @@ def split_audio(duration=DEFAULT_DURATION, thresh=SILENCE_THRESH):
                             count = i + 1
                 else:
                     # Check that chunk isn't COMPLETELY silent
-                    got_silence = detect_nonsilent(audio, SILENCE_DUR, thresh, seek_step=25)
-                    if not got_silence:
-                        print ("This chunk is completely silent.")
-                        return 0
-                    print("No silence detected, making chunks!")
-                    chunks = make_chunks(audio, duration)
-                    for i, chunk in enumerate(chunks, start=count):
-                        chunk_name = OUTPUT_PATH + "/" + name + "_chunk_{0}.wav".format(i)
-                        print("Exporting: " + chunk_name)
-                        chunk.export(chunk_name, format="wav")  # this assumes the path exists
-                        count = i + 1
-        print(time.time() - start_time)
-        return 1
+                    # got_silence = detect_nonsilent(audio, SILENCE_DUR, thresh, seek_step=25)
+                    if not segments:
+                        print("This chunk is completely silent.")
+                        # yield 0
+                    else:
+                        print("No silence detected, making chunks!")
+                        chunks = make_chunks(audio, duration)
+                        for i, chunk in enumerate(chunks, start=count):
+                            chunk_name = OUTPUT_PATH + "/" + name + "_chunk_{0}.wav".format(i)
+                            print("Exporting: " + chunk_name)
+                            chunk.export(chunk_name, format="wav")  # this assumes the path exists
+                            count = i + 1
+        print("Total time taken:", time.time() - start_time)
+        current, peak = tracemalloc.get_traced_memory()
+        print(f"Current memory usage is {current / 10 ** 6}MB; Peak was {peak / 10 ** 6}MB")
+        tracemalloc.stop()
 
 
 if __name__ == "__main__":

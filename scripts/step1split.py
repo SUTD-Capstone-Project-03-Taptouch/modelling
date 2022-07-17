@@ -20,6 +20,7 @@ DEFAULT_DURATION = 3000
 # DEFAULT_FILETYPE = ".wav" yeah let's not
 SILENCE_DUR = 3000  # for how long should there be no sound before it's considered a silent segment
 SILENCE_THRESH = -40  # this number is very finicky: most song files have threshold at -24. online sources say -40
+PAD_MS = 500 # librosa throws a hissy fit if you give it nothing
 
 
 # def split_audio(duration, filetype):
@@ -67,6 +68,16 @@ def split_audio(duration=DEFAULT_DURATION, thresh=SILENCE_THRESH):
         current, peak = tracemalloc.get_traced_memory()
         print(f"Current memory usage is {current / 10 ** 6}MB; Peak was {peak / 10 ** 6}MB")
         tracemalloc.stop()
+
+
+def pad_for_librosa(clip):
+    if len(clip) > PAD_MS:
+        return clip
+    else:
+        silence = AudioSegment.silent(duration=PAD_MS-len(clip)+1)
+        print("This clip was too short for librosa so we padded it just a bit.")
+        padded = clip + silence
+        return padded
 
 
 if __name__ == "__main__":

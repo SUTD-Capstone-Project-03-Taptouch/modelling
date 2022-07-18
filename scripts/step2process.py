@@ -17,7 +17,7 @@ def librosafy():
             signal = np.zeros((int(SAMPLE_RATE * 3, )))
             signal[:len(audio)] = audio
             signals.append(signal)
-            print("\r Processed {}/{} files.".format(i, len(files)), end=" ")
+            print("\r Processed {}/{} files.".format(i+1, len(files)), end=" ")
     signals = np.stack(signals, axis=0)
     print("\n", signals)
     print("I have converted " + str(len(signals)) + " files.")

@@ -1,6 +1,7 @@
 import os
 import logging
 import argparse
+import shutil
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +33,12 @@ def cleandirs(pathdir, mode=0):  # 0: partial cleanup, 1: full cleanup
                 errs += 1
                 log.error(e)
                 continue
+    elif mode == 2:
+        try:
+            shutil.rmtree(pathdir)
+        except OSError as e:
+            errs += 1
+            log.error(e)
     else:
         log.error("Invalid cleanup mode:")
         return -1
@@ -48,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--path", help="Path to the directory to clean.")
     parser.add_argument("-m", "--mode", type=int,
                         help="(Optional) Cleanup mode. 0: Does not clean up testing files. 1: Clean "
-                             "all audio files. Use with caution.")
+                             "all audio files. 2: Clean all directories and subdirectories. Use with caution.")
     # parser.add_argument("-f", "--filetype", help="Audio format, e.g. \".mp3\". Defaults to .wav if not specified.")
     args = parser.parse_args()
 

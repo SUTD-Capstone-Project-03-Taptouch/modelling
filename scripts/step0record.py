@@ -28,7 +28,7 @@ def record_audio(sample_rate=SAMPLE_RATE, duration=DURATION):
     counter = 0
     while True:
         tracemalloc.start()
-        timestamp = "{:%Y%m%d-%H%M%S}".format(datetime.datetime.now())
+        timestamp = "{:%Y%m%d_%H%M%S}".format(datetime.datetime.now())
         # print(timestamp)
         print("Recording file {0}.".format(counter))
         recording = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=2)
